@@ -1,7 +1,7 @@
 import React from "react";
 import { StarredPromptCard } from "../elements/starred-message";
 import Link from "next/link";
-import { MessageResponse, StarredMessage } from "@/helper/types";
+import { StarredMessage } from "@/helper/types";
 import dayjs from "dayjs";
 import { ArrowLeft } from "lucide-react";
 

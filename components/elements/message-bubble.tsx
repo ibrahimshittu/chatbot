@@ -40,23 +40,25 @@ export function MessageBubble({
           {msg.content}
         </Markdown>
 
-        {msg.role === "assistant" && !isStreamingAssistant && (
-          <button
-            className="absolute bottom-1 right-2"
-            onClick={() => {
-              if (!msg.id) return;
-              onToggleStar(msg.id);
-            }}
-            title="Star message"
-          >
-            <Star
-              className={`h-4 w-4 ${
-                msg.isStarred ? "text-yellow-400" : "text-gray-400"
-              }`}
-              fill="currentColor"
-            />
-          </button>
-        )}
+        {msg.role === "assistant" &&
+          !isStreamingAssistant &&
+          msg.model !== "" && (
+            <button
+              className="absolute bottom-1 right-2"
+              onClick={() => {
+                if (!msg.id) return;
+                onToggleStar(msg.id);
+              }}
+              title="Star message"
+            >
+              <Star
+                className={`h-4 w-4 ${
+                  msg.isStarred ? "text-yellow-400" : "text-gray-400"
+                }`}
+                fill="currentColor"
+              />
+            </button>
+          )}
 
         {msg.role === "assistant" &&
           !isStreamingAssistant &&

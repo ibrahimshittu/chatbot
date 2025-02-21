@@ -9,11 +9,12 @@ import { Input } from "../ui/input";
 import { ModelOptions } from "../elements/model-options";
 import { useLLMStore, usePromptStore } from "@/store/llm-store";
 import { sendMessage, starMessage, unstarMessage } from "@/app/actions";
-import { MessageResponse } from "@/helper/types";
+import { Message } from "@/helper/types";
 import { MessageBubble } from "../elements/message-bubble";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
-const initialState: MessageResponse = {
+const initialState: Message = {
   id: "",
   input: "",
   response: "",
@@ -30,12 +31,13 @@ export default function HomePage() {
     updateLastAssistantPrompt,
     toggleStar,
   } = usePromptStore();
-
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const model = useLLMStore().selectedModel;
 
   const streamingOptions = useRef<{ stop: boolean }>({ stop: false });
+
+  const { toast } = useToast();
 
   // Handle auto-scrolling, and override if user scrolls up
   const [autoScroll, setAutoScroll] = useState(true);
@@ -88,13 +90,22 @@ export default function HomePage() {
 
   useEffect(() => {
     const doStreaming = async () => {
-      if (!sendMessageState.response) return;
+      if (sendMessageState.response === "ERROR") {
+        addPrompts({
+          role: "assistant",
+          content: "Failed to get a response from the server.",
+          model: "",
+          isStarred: false,
+        });
+        return;
+      }
+
+      if (!sendMessageState.response && !sendMessageState.model) return;
 
       addPrompts({
         role: "assistant",
         id: sendMessageState.id,
-        content: "",
-        model: sendMessageState.model,
+        content: sendMessageState.model,
         isStarred: false,
       });
 
@@ -134,7 +145,11 @@ export default function HomePage() {
         starMessage(id);
       }
     } catch (error) {
-      return;
+      toast({
+        title: "Uh oh! 🤯 ",
+        description: "Failed to star the message.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -157,6 +172,12 @@ export default function HomePage() {
           onScroll={handleScroll}
         >
           <div className="space-y-4 w-full">
+            {prompts.length === 0 && (
+              <p className="text-center text-gray-500 dark:text-gray-400">
+                Start a conversation by typing a message below!
+              </p>
+            )}
+
             {prompts.map((msg, index) => {
               const isUser = msg.role === "user";
 

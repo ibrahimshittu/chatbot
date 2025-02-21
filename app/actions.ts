@@ -1,36 +1,32 @@
 "use server";
 
-import {
-  MessageRequest,
-  MessageResponse,
-  StarredMessage,
-} from "../helper/types";
+import { MessageRequest, Message, StarredMessage } from "../helper/types";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3001";
-
-export const getChats = async () => {
-  const res = await fetch(`${BASE_URL}/api/chat`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to fetch chats");
-  return res.json();
-};
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
 
 export const getStarredChats = async (): Promise<StarredMessage[]> => {
   const res = await fetch(`${BASE_URL}/api/star`, { cache: "no-store" });
-  if (!res.ok) throw new Error("Failed to fetch starred chats");
+  if (!res.ok) return [];
   return res.json();
 };
 
 export const sendMessage = async (
-  prev: MessageRequest,
-  body: MessageRequest
-): Promise<MessageResponse> => {
+  state: Message,
+  payload: MessageRequest
+): Promise<Message> => {
   const res = await fetch(`${BASE_URL}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    body: JSON.stringify(payload),
   });
 
-  if (!res.ok) throw new Error("Failed to send message");
+  if (!res.ok) {
+    return {
+      ...state,
+      response: "ERROR",
+    };
+  }
+
   return res.json();
 };
 
@@ -41,7 +37,7 @@ export const starMessage = async (chatId: string) => {
     body: JSON.stringify({ chatId }),
   });
 
-  if (!res.ok) throw new Error("Failed to star message");
+  if (!res.ok) return;
   return res.json();
 };
 
@@ -52,6 +48,6 @@ export const unstarMessage = async (chatId: string) => {
     body: JSON.stringify({ chatId }),
   });
 
-  if (!res.ok) throw new Error("Failed to unstar message");
+  if (!res.ok) return;
   return res.json();
 };

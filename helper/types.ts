@@ -6,7 +6,7 @@ export interface Prompt {
   model?: string;
 }
 
-export interface MessageResponse {
+export interface Message {
   id: string;
   input: string;
   response: string;
