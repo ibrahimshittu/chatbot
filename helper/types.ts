@@ -1,12 +1,12 @@
-export type Message = {
+export interface Message {
   role: "user" | "assistant";
   content: string;
   isStarred?: boolean;
   model?: string;
   id?: string;
-};
+}
 
-export type MessageResponse = {
+export interface MessageResponse {
   id: string;
   input: string;
   response: string;
@@ -18,9 +18,22 @@ export type MessageResponse = {
     createdAt: string;
     updatedAt: string;
   } | null;
-};
+}
+export interface StarredMessage {
+  id: string;
+  chatId: string;
+  createdAt: string;
+  updatedAt: string;
+  chat?: {
+    id: string;
+    input: string;
+    response: string;
+    model: string;
+    createdAt: string;
+  } | null;
+}
 
-export type MessageRequest = {
+export interface MessageRequest {
   input: string;
   model: string;
-};
+}

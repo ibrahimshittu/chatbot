@@ -3,16 +3,15 @@
 import React, { useState, useRef, useEffect, startTransition } from "react";
 import { useActionState } from "react";
 import { Button } from "../ui/button";
-import { ModeToggle } from "../elements/toggle-mode";
 import { simulateLLMStreaming } from "@/lib/generator";
-import { CircleSlash, RotateCcw, Star } from "lucide-react";
+import { CircleSlash, RotateCcw } from "lucide-react";
 import { Input } from "../ui/input";
 import { ModelOptions } from "../elements/model-options";
-import Markdown from "react-markdown";
-import remarkGfm from "remark-gfm";
 import { useLLMStore } from "@/store/llm-store";
 import { sendMessage, starMessage, unstarMessage } from "@/app/actions";
 import { Message, MessageResponse } from "@/helper/types";
+import { MessageBubble } from "../elements/message-bubble";
+import Link from "next/link";
 
 const initialState: MessageResponse = {
   id: "",
@@ -129,37 +128,45 @@ export default function HomePage() {
     const message = messages.find((msg) => msg.id === id);
     if (!message) return;
 
-    if (message.isStarred) {
-      unstarMessage(id);
-    } else {
-      starMessage(id);
-    }
+    try {
+      setMessages((prev) =>
+        prev.map((msg) => {
+          if (msg.id === id) {
+            return { ...msg, isStarred: !msg.isStarred };
+          }
+          return msg;
+        })
+      );
 
-    setMessages((prev) =>
-      prev.map((msg) => {
-        if (msg.id === id) {
-          return { ...msg, isStarred: !msg.isStarred };
-        }
-        return msg;
-      })
-    );
+      if (message.isStarred) {
+        unstarMessage(id);
+      } else {
+        starMessage(id);
+      }
+    } catch (error) {
+      return;
+    }
   };
 
   return (
     <div className="max-w-7xl relative mx-auto h-[100dvh] flex flex-col justify-center items-center space-y-12">
-      <div className="absolute top-4 right-4">
-        <ModeToggle />
-      </div>
-
       <h1 className="font-bold text-2xl">{model || "Chat with me"}</h1>
 
       <div className="flex flex-col items-center space-y-4 max-w-xl w-full">
+        <Link
+          href="/starred"
+          className="transition-transform duration-300 transform hover:underline justify-start flex items-center w-full"
+        >
+          <span>🌟</span>
+          View Starred Messages
+        </Link>
+
         <div
           className="relative max-w-xl w-full p-4 border rounded-md flex flex-col h-96 overflow-y-auto no-scrollbar"
           ref={chatContainerRef}
           onScroll={handleScroll}
         >
-          <div className="space-y-4">
+          <div className="space-y-4 w-full">
             {messages.map((msg, index) => {
               const isUser = msg.role === "user";
 
@@ -169,63 +176,14 @@ export default function HomePage() {
                 index === messages.length - 1;
 
               return (
-                <div
+                <MessageBubble
                   key={index}
-                  className={`flex w-full ${
-                    isUser ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`
-                      relative px-4 py-3 rounded-xl shadow-md
-                      max-w-[75%] sm:max-w-[60%] md:max-w-[55%] lg:max-w-[48%]
-                      ${
-                        isUser
-                          ? "bg-gray-700 dark:bg-gray-300 text-white dark:text-black rounded-br-none animate-in slide-in-from-right-2"
-                          : `bg-gray-200 dark:bg-gray-800 text-black dark:text-white rounded-bl-none animate-in slide-in-from-left-2 ${
-                              isStreamingAssistant ? "animate-pulse" : ""
-                            } ${
-                              msg.model !== model
-                                ? "pb-6 border-b border-gray-300 dark:border-gray-700"
-                                : ""
-                            }`
-                      }
-                    `}
-                  >
-                    <Markdown
-                      className="break-words"
-                      remarkPlugins={[remarkGfm]}
-                    >
-                      {msg.content}
-                    </Markdown>
-
-                    {msg.role === "assistant" && !isStreamingAssistant && (
-                      <button
-                        className="absolute bottom-1 right-2"
-                        onClick={() => {
-                          if (!msg.id) return;
-                          handleToggleStar(msg.id);
-                        }}
-                        title="Star message"
-                      >
-                        <Star
-                          className={`h-4 w-4 ${
-                            msg.isStarred ? "text-yellow-400" : "text-gray-400"
-                          }`}
-                          fill="currentColor"
-                        />
-                      </button>
-                    )}
-
-                    {msg.role === "assistant" &&
-                      !isStreamingAssistant &&
-                      msg.model !== model && (
-                        <p className=" absolute bottom-1 left-4 text-xs text-gray-400 dark:text-gray-600">
-                          {msg.model}
-                        </p>
-                      )}
-                  </div>
-                </div>
+                  msg={msg}
+                  isUser={isUser}
+                  isStreamingAssistant={isStreamingAssistant}
+                  model={model}
+                  onToggleStar={handleToggleStar}
+                />
               );
             })}
           </div>

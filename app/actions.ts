@@ -1,6 +1,10 @@
 "use server";
 
-import { MessageRequest, MessageResponse } from "../helper/types";
+import {
+  MessageRequest,
+  MessageResponse,
+  StarredMessage,
+} from "../helper/types";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3001";
 
@@ -10,7 +14,7 @@ export const getChats = async () => {
   return res.json();
 };
 
-export const getStarredChats = async () => {
+export const getStarredChats = async (): Promise<StarredMessage[]> => {
   const res = await fetch(`${BASE_URL}/api/star`, { cache: "no-store" });
   if (!res.ok) throw new Error("Failed to fetch starred chats");
   return res.json();
