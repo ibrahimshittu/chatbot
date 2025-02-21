@@ -19,33 +19,17 @@ type Message = {
   isStarred?: boolean;
 };
 
-type Chat = {
-  id: string;
-  input: string;
-  response: string;
-  model: string;
-  createdAt: string;
-  star?: {
-    id: string;
-    chatId: string;
-    createdAt: string;
-    updatedAt: string;
-  } | null;
-};
-
-export default function HomePage({ chats }: { chats: Chat[] }) {
+export default function HomePage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const model = useLLMStore().selectedModel;
 
   const streamingOptions = useRef<{ stop: boolean }>({ stop: false });
 
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
-  const model = useLLMStore().selectedModel;
-
-  const [sendMessageState, sendMessageAction, pendingsendMessage] =
-    useActionState(sendMessage, {});
+  const [sendMessageState, sendMessageAction] = useActionState(sendMessage, {});
 
   useEffect(() => {
     if (chatEndRef.current) {
@@ -75,13 +59,10 @@ export default function HomePage({ chats }: { chats: Chat[] }) {
     const doStreaming = async () => {
       if (!sendMessageState.response) return;
 
-      const hasAssistant = messages.some((msg) => msg.role === "assistant");
-      if (!hasAssistant) {
-        setMessages((prev) => [
-          ...prev,
-          { role: "assistant", content: "", isStarred: false },
-        ]);
-      }
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "", isStarred: false },
+      ]);
 
       setLoading(true);
 
@@ -125,11 +106,10 @@ export default function HomePage({ chats }: { chats: Chat[] }) {
       <h1 className="font-bold text-2xl">{model || "Chat with me"}</h1>
 
       <div className="flex flex-col items-center space-y-4 max-w-xl w-full">
-        <div className="relative max-w-xl w-full p-4 border rounded-md flex flex-col h-96 overflow-y-auto">
+        <div className="relative max-w-xl w-full p-4 border rounded-md flex flex-col h-96 overflow-y-auto no-scrollbar">
           <div className="space-y-4">
             {messages.map((msg, index) => {
               const isUser = msg.role === "user";
-              const isAssistant = msg.role === "assistant";
 
               return (
                 <div
@@ -149,26 +129,12 @@ export default function HomePage({ chats }: { chats: Chat[] }) {
                       }
                     `}
                   >
-                    {isAssistant && !msg.content ? (
-                      <div className="text-sm font-bold">
-                        {Array.from({ length: 3 }, (_, i) => (
-                          <span
-                            key={i}
-                            className="inline-block animate-bounce ml-1"
-                            style={{ animationDelay: `${i * 200}ms` }}
-                          >
-                            .
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <Markdown
-                        className="break-words"
-                        remarkPlugins={[remarkGfm]}
-                      >
-                        {msg.content}
-                      </Markdown>
-                    )}
+                    <Markdown
+                      className="break-words"
+                      remarkPlugins={[remarkGfm]}
+                    >
+                      {msg.content}
+                    </Markdown>
                   </div>
                 </div>
               );
