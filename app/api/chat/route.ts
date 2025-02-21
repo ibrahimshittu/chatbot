@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
     const chatResponse = response.choices[0].message.content || "";
 
-    await prisma.chat.create({
+    const result = await prisma.chat.create({
       data: {
         model,
         input,
@@ -30,10 +30,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(
-      { response: chatResponse, model },
-      { status: 200 }
-    );
+    return NextResponse.json(result, { status: 200 });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

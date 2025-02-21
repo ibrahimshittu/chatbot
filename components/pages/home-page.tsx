@@ -5,18 +5,23 @@ import { useActionState } from "react";
 import { Button } from "../ui/button";
 import { ModeToggle } from "../elements/toggle-mode";
 import { simulateLLMStreaming } from "@/lib/generator";
-import { CircleSlash, RotateCcw } from "lucide-react";
+import { CircleSlash, RotateCcw, Star } from "lucide-react";
 import { Input } from "../ui/input";
 import { ModelOptions } from "../elements/model-options";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useLLMStore } from "@/store/llm-store";
-import { sendMessage } from "@/helper/actions";
+import { sendMessage } from "@/app/actions";
+import { Message, MessageResponse } from "@/helper/schema";
+import { useOptimistic } from "react";
 
-type Message = {
-  role: "user" | "assistant";
-  content: string;
-  isStarred?: boolean;
+const initialState: MessageResponse = {
+  id: "",
+  input: "",
+  response: "",
+  model: "",
+  createdAt: "",
+  star: null,
 };
 
 export default function HomePage() {
@@ -47,7 +52,10 @@ export default function HomePage() {
   };
 
   // Send messages and stream the assistant response
-  const [sendMessageState, sendMessageAction] = useActionState(sendMessage, {});
+  const [sendMessageState, sendMessageAction] = useActionState(
+    sendMessage,
+    initialState
+  );
 
   const handleSendMessage = () => {
     if (!input.trim()) return;
@@ -73,7 +81,12 @@ export default function HomePage() {
 
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "", isStarred: false },
+        {
+          role: "assistant",
+          id: sendMessageState.id,
+          content: "",
+          isStarred: false,
+        },
       ]);
 
       setLoading(true);
@@ -127,6 +140,11 @@ export default function HomePage() {
             {messages.map((msg, index) => {
               const isUser = msg.role === "user";
 
+              const isStreamingAssistant =
+                loading &&
+                msg.role === "assistant" &&
+                index === messages.length - 1;
+
               return (
                 <div
                   key={index}
@@ -151,6 +169,21 @@ export default function HomePage() {
                     >
                       {msg.content}
                     </Markdown>
+
+                    {msg.role === "assistant" && !isStreamingAssistant && (
+                      <button
+                        className="absolute bottom-2 right-2"
+                        // onClick={() => handleToggleStar(index)}
+                        title="Star message"
+                      >
+                        <Star
+                          className={`h-4 w-4 ${
+                            msg.isStarred ? "text-yellow-400" : "text-gray-400"
+                          }`}
+                          fill="currentColor"
+                        />
+                      </button>
+                    )}
                   </div>
                 </div>
               );
