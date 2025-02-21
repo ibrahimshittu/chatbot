@@ -54,8 +54,9 @@ export default function HomePage({ chats }: { chats: Chat[] }) {
     if (!input.trim()) return;
 
     setMessages((prev) => [...prev, { role: "user", content: input.trim() }]);
+
     startTransition(() => {
-      sendMessageAction(input.trim());
+      sendMessageAction({ input: input.trim(), model });
     });
     setInput("");
     streamingOptions.current.stop = false;
@@ -70,7 +71,7 @@ export default function HomePage({ chats }: { chats: Chat[] }) {
     ]);
 
     let streamedContent = "";
-    for await (const chunk of simulateLLMStreaming(simulatedResponse, {
+    for await (const chunk of simulateLLMStreaming(sendMessageState.response, {
       delayMs: 200,
       chunkSize: 12,
       stop: streamingOptions.current.stop,

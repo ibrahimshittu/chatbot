@@ -24,12 +24,15 @@ export const getStarredChats = async () => {
   }
 };
 
-export const sendMessage = async (input: string, model: string) => {
+export const sendMessage = async (
+  prev: { input: string; model: string },
+  body: { input: string; model: string }
+) => {
   try {
     const res = await fetch(`${BASE_URL}/api/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ input, model }),
+      body: JSON.stringify(body),
     });
 
     if (!res.ok) throw new Error("Failed to send message");
