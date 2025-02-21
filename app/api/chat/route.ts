@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@prisma/client";
 import OpenAI from "openai";
 
@@ -7,7 +7,7 @@ const openai = new OpenAI({ apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY });
 
 const DEFAULT_MODEL = "gpt-3.5-turbo";
 
-export default async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const { input, model = DEFAULT_MODEL } = await req.json();
 
@@ -36,7 +36,10 @@ export default async function POST(req: Request) {
     );
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: `Internal server error: ${error}` },
+      { status: 500 }
+    );
   }
 }
 
