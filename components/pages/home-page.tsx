@@ -12,7 +12,7 @@ import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useLLMStore } from "@/store/llm-store";
 import { sendMessage, starMessage, unstarMessage } from "@/app/actions";
-import { Message, MessageResponse } from "@/helper/schema";
+import { Message, MessageResponse } from "@/helper/types";
 
 const initialState: MessageResponse = {
   id: "",
@@ -59,7 +59,10 @@ export default function HomePage() {
   const handleSendMessage = () => {
     if (!input.trim()) return;
 
-    setMessages((prev) => [...prev, { role: "user", content: input.trim() }]);
+    setMessages((prev) => [
+      ...prev,
+      { role: "user", model: model, content: input.trim() },
+    ]);
     setInput("");
 
     startTransition(() => {
@@ -84,6 +87,7 @@ export default function HomePage() {
           role: "assistant",
           id: sendMessageState.id,
           content: "",
+          model: sendMessageState.model,
           isStarred: false,
         },
       ]);
@@ -178,7 +182,13 @@ export default function HomePage() {
                       ${
                         isUser
                           ? "bg-gray-700 dark:bg-gray-300 text-white dark:text-black rounded-br-none animate-in slide-in-from-right-2"
-                          : "bg-gray-200 dark:bg-gray-800 text-black dark:text-white rounded-bl-none animate-in slide-in-from-left-2"
+                          : `bg-gray-200 dark:bg-gray-800 text-black dark:text-white rounded-bl-none animate-in slide-in-from-left-2 ${
+                              isStreamingAssistant ? "animate-pulse" : ""
+                            } ${
+                              msg.model !== model
+                                ? "pb-6 border-b border-gray-300 dark:border-gray-700"
+                                : ""
+                            }`
                       }
                     `}
                   >
@@ -191,7 +201,7 @@ export default function HomePage() {
 
                     {msg.role === "assistant" && !isStreamingAssistant && (
                       <button
-                        className="absolute bottom-2 right-2"
+                        className="absolute bottom-1 right-2"
                         onClick={() => {
                           if (!msg.id) return;
                           handleToggleStar(msg.id);
@@ -206,6 +216,14 @@ export default function HomePage() {
                         />
                       </button>
                     )}
+
+                    {msg.role === "assistant" &&
+                      !isStreamingAssistant &&
+                      msg.model !== model && (
+                        <p className=" absolute bottom-1 left-4 text-xs text-gray-400 dark:text-gray-600">
+                          {msg.model}
+                        </p>
+                      )}
                   </div>
                 </div>
               );
