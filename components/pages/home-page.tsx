@@ -11,9 +11,8 @@ import { ModelOptions } from "../elements/model-options";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useLLMStore } from "@/store/llm-store";
-import { sendMessage } from "@/app/actions";
+import { sendMessage, starMessage, unstarMessage } from "@/app/actions";
 import { Message, MessageResponse } from "@/helper/schema";
-import { useOptimistic } from "react";
 
 const initialState: MessageResponse = {
   id: "",
@@ -122,6 +121,26 @@ export default function HomePage() {
     doStreaming();
   }, [sendMessageState.response]);
 
+  const handleToggleStar = (id: string) => {
+    const message = messages.find((msg) => msg.id === id);
+    if (!message) return;
+
+    if (message.isStarred) {
+      unstarMessage(id);
+    } else {
+      starMessage(id);
+    }
+
+    setMessages((prev) =>
+      prev.map((msg) => {
+        if (msg.id === id) {
+          return { ...msg, isStarred: !msg.isStarred };
+        }
+        return msg;
+      })
+    );
+  };
+
   return (
     <div className="max-w-7xl relative mx-auto h-[100dvh] flex flex-col justify-center items-center space-y-12">
       <div className="absolute top-4 right-4">
@@ -173,7 +192,10 @@ export default function HomePage() {
                     {msg.role === "assistant" && !isStreamingAssistant && (
                       <button
                         className="absolute bottom-2 right-2"
-                        // onClick={() => handleToggleStar(index)}
+                        onClick={() => {
+                          if (!msg.id) return;
+                          handleToggleStar(msg.id);
+                        }}
                         title="Star message"
                       >
                         <Star
