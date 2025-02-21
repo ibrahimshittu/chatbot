@@ -27,15 +27,27 @@ export default function HomePage() {
 
   const streamingOptions = useRef<{ stop: boolean }>({ stop: false });
 
-  const chatEndRef = useRef<HTMLDivElement | null>(null);
-
-  const [sendMessageState, sendMessageAction] = useActionState(sendMessage, {});
+  // Handle auto-scrolling, and override if user scrolls up
+  const [autoScroll, setAutoScroll] = useState(true);
+  const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+    if (autoScroll && chatContainerRef.current) {
+      chatContainerRef.current.scrollTop =
+        chatContainerRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, autoScroll]);
+
+  const handleScroll = () => {
+    if (!chatContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
+
+    setAutoScroll(isAtBottom);
+  };
+
+  // Send messages and stream the assistant response
+  const [sendMessageState, sendMessageAction] = useActionState(sendMessage, {});
 
   const handleSendMessage = () => {
     if (!input.trim()) return;
@@ -106,7 +118,11 @@ export default function HomePage() {
       <h1 className="font-bold text-2xl">{model || "Chat with me"}</h1>
 
       <div className="flex flex-col items-center space-y-4 max-w-xl w-full">
-        <div className="relative max-w-xl w-full p-4 border rounded-md flex flex-col h-96 overflow-y-auto no-scrollbar">
+        <div
+          className="relative max-w-xl w-full p-4 border rounded-md flex flex-col h-96 overflow-y-auto no-scrollbar"
+          ref={chatContainerRef}
+          onScroll={handleScroll}
+        >
           <div className="space-y-4">
             {messages.map((msg, index) => {
               const isUser = msg.role === "user";
@@ -139,7 +155,6 @@ export default function HomePage() {
                 </div>
               );
             })}
-            <div ref={chatEndRef} />
           </div>
         </div>
 
