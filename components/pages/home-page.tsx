@@ -7,9 +7,9 @@ import { simulateLLMStreaming } from "@/lib/generator";
 import { CircleSlash, RotateCcw } from "lucide-react";
 import { Input } from "../ui/input";
 import { ModelOptions } from "../elements/model-options";
-import { useLLMStore } from "@/store/llm-store";
+import { useLLMStore, usePromptStore } from "@/store/llm-store";
 import { sendMessage, starMessage, unstarMessage } from "@/app/actions";
-import { Message, MessageResponse } from "@/helper/types";
+import { MessageResponse } from "@/helper/types";
 import { MessageBubble } from "../elements/message-bubble";
 import Link from "next/link";
 
@@ -23,7 +23,14 @@ const initialState: MessageResponse = {
 };
 
 export default function HomePage() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const {
+    prompts,
+    addPrompts,
+    setPrompts,
+    updateLastAssistantPrompt,
+    toggleStar,
+  } = usePromptStore();
+
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const model = useLLMStore().selectedModel;
@@ -39,7 +46,7 @@ export default function HomePage() {
       chatContainerRef.current.scrollTop =
         chatContainerRef.current.scrollHeight;
     }
-  }, [messages, autoScroll]);
+  }, [prompts, autoScroll]);
 
   const handleScroll = () => {
     if (!chatContainerRef.current) return;
@@ -58,10 +65,13 @@ export default function HomePage() {
   const handleSendMessage = () => {
     if (!input.trim()) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { role: "user", model: model, content: input.trim() },
-    ]);
+    addPrompts({
+      role: "user",
+      content: input.trim(),
+      model,
+      isStarred: false,
+    });
+
     setInput("");
 
     startTransition(() => {
@@ -80,16 +90,13 @@ export default function HomePage() {
     const doStreaming = async () => {
       if (!sendMessageState.response) return;
 
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          id: sendMessageState.id,
-          content: "",
-          model: sendMessageState.model,
-          isStarred: false,
-        },
-      ]);
+      addPrompts({
+        role: "assistant",
+        id: sendMessageState.id,
+        content: "",
+        model: sendMessageState.model,
+        isStarred: false,
+      });
 
       setLoading(true);
 
@@ -105,17 +112,7 @@ export default function HomePage() {
         if (streamingOptions.current.stop) break;
 
         streamedContent += chunk;
-        setMessages((prev) => {
-          const updated = [...prev];
-          const lastIndex = updated.length - 1;
-          if (updated[lastIndex].role === "assistant") {
-            updated[lastIndex] = {
-              ...updated[lastIndex],
-              content: streamedContent,
-            };
-          }
-          return updated;
-        });
+        updateLastAssistantPrompt(streamedContent);
       }
 
       setLoading(false);
@@ -125,18 +122,11 @@ export default function HomePage() {
   }, [sendMessageState.response]);
 
   const handleToggleStar = (id: string) => {
-    const message = messages.find((msg) => msg.id === id);
+    const message = prompts.find((msg) => msg.id === id);
     if (!message) return;
 
     try {
-      setMessages((prev) =>
-        prev.map((msg) => {
-          if (msg.id === id) {
-            return { ...msg, isStarred: !msg.isStarred };
-          }
-          return msg;
-        })
-      );
+      toggleStar(id);
 
       if (message.isStarred) {
         unstarMessage(id);
@@ -167,13 +157,13 @@ export default function HomePage() {
           onScroll={handleScroll}
         >
           <div className="space-y-4 w-full">
-            {messages.map((msg, index) => {
+            {prompts.map((msg, index) => {
               const isUser = msg.role === "user";
 
               const isStreamingAssistant =
                 loading &&
                 msg.role === "assistant" &&
-                index === messages.length - 1;
+                index === prompts.length - 1;
 
               return (
                 <MessageBubble
@@ -201,11 +191,11 @@ export default function HomePage() {
             </Button>
           )}
           <Button
-            onClick={() => setMessages([])}
+            onClick={() => setPrompts([])}
             variant="outline"
             size="icon"
             title="Clear Chat"
-            disabled={loading || !messages.length}
+            disabled={loading || !prompts.length}
           >
             <RotateCcw />
           </Button>

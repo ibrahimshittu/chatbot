@@ -1,9 +1,9 @@
-export interface Message {
+export interface Prompt {
+  id?: string;
   role: "user" | "assistant";
   content: string;
   isStarred?: boolean;
   model?: string;
-  id?: string;
 }
 
 export interface MessageResponse {
@@ -36,4 +36,17 @@ export interface StarredMessage {
 export interface MessageRequest {
   input: string;
   model: string;
+}
+
+export interface LLMStore {
+  selectedModel: string;
+  setSelectedModel: (model: string) => void;
+}
+
+export interface PromptStore {
+  prompts: Prompt[];
+  addPrompts: (prompt: Prompt | Prompt[]) => void;
+  setPrompts: (prompts: Prompt[]) => void;
+  updateLastAssistantPrompt: (streamedContent: string) => void;
+  toggleStar: (id: string) => void;
 }

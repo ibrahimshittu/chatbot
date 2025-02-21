@@ -2,10 +2,10 @@ import React from "react";
 import { Star } from "lucide-react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Message } from "@/helper/types";
+import { Prompt } from "@/helper/types";
 
 interface MessageBubbleProps {
-  msg: Message;
+  msg: Prompt;
   isUser: boolean;
   isStreamingAssistant: boolean;
   model: string | null;
@@ -27,10 +27,8 @@ export function MessageBubble({
           max-w-[75%] sm:max-w-[60%] md:max-w-[55%] lg:max-w-[48%]
           ${
             isUser
-              ? "bg-gray-700 dark:bg-gray-300 text-white dark:text-black rounded-br-none animate-in slide-in-from-right-2"
-              : `bg-gray-200 dark:bg-gray-800 text-black dark:text-white rounded-bl-none animate-in slide-in-from-left-2 ${
-                  isStreamingAssistant ? "animate-pulse" : ""
-                } ${
+              ? "bg-gray-700 dark:bg-gray-300 text-white dark:text-black rounded-br-none animate-in slide-in-from-bottom-2"
+              : `bg-gray-200 dark:bg-gray-800 text-black dark:text-white rounded-bl-none animate-in slide-in-from-bottom-2 ${
                   msg.model && msg.model !== model
                     ? "pb-6 border-b border-gray-300 dark:border-gray-700"
                     : ""
