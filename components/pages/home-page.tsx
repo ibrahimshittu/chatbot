@@ -102,6 +102,7 @@ export default function HomePage() {
       addPrompts({
         role: "assistant",
         id: sendMessageState.id,
+        model: sendMessageState.model,
         content: sendMessageState.model,
         isStarred: false,
       });
