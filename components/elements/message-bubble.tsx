@@ -36,7 +36,10 @@ export function MessageBubble({
           }
         `}
       >
-        <Markdown className="break-words" remarkPlugins={[remarkGfm]}>
+        <Markdown
+          className="break-words whitespace-pre-wrap"
+          remarkPlugins={[remarkGfm]}
+        >
           {msg.content}
         </Markdown>
 
