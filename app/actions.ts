@@ -2,7 +2,9 @@
 
 import { MessageRequest, Message, StarredMessage } from "../helper/types";
 
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
+
+console.log(BASE_URL);
 
 export const getStarredChats = async (): Promise<StarredMessage[]> => {
   const res = await fetch(`${BASE_URL}/api/star`, { cache: "no-store" });

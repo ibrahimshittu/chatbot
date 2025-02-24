@@ -12,7 +12,6 @@ import { sendMessage, starMessage, unstarMessage } from "@/app/actions";
 import { Message } from "@/helper/types";
 import { MessageBubble } from "../elements/message-bubble";
 import Link from "next/link";
-import { useToast } from "@/hooks/use-toast";
 
 const initialState: Message = {
   id: "",
@@ -36,8 +35,6 @@ export default function HomePage() {
   const model = useLLMStore().selectedModel;
 
   const streamingOptions = useRef<{ stop: boolean }>({ stop: false });
-
-  const { toast } = useToast();
 
   // Handle auto-scrolling, and override if user scrolls up
   const [autoScroll, setAutoScroll] = useState(true);
@@ -136,20 +133,12 @@ export default function HomePage() {
     const message = prompts.find((msg) => msg.id === id);
     if (!message) return;
 
-    try {
-      toggleStar(id);
+    toggleStar(id);
 
-      if (message.isStarred) {
-        unstarMessage(id);
-      } else {
-        starMessage(id);
-      }
-    } catch (error) {
-      toast({
-        title: "Uh oh! 🤯 ",
-        description: "Failed to star the message.",
-        variant: "destructive",
-      });
+    if (message.isStarred) {
+      unstarMessage(id);
+    } else {
+      starMessage(id);
     }
   };
 
